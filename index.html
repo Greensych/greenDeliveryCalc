@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Зелёный Слоник · Delivery Calc</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap');
+    
+    :root {
+      --army-green: #3d5c3a;
+      --dirty-green: #2a3f28;
+      --khaki: #6b7c4e;
+      --poison: #8fbc8f;
+      --blood: #8b0000;
+      --barracks: #1a1f1a;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: 
+        radial-gradient(ellipse at 20% 0%, rgba(61, 92, 58, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(139, 0, 0, 0.12) 0%, transparent 40%),
+        #0d120d;
+      min-height: 100vh;
+      color: #c8d4c0;
+    }
+    
+    .title-font {
+      font-family: 'Press Start 2P', system-ui, monospace;
+    }
+    
+    .panel {
+      background: linear-gradient(160deg, #1c241c 0%, #141a14 100%);
+      border: 1px solid #2f3d2c;
+      box-shadow: 
+        0 0 0 1px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(143, 188, 143, 0.08);
+    }
+    
+    .input-field {
+      background: #0f140f;
+      border: 1px solid #2f3d2c;
+      color: #d4e0c8;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: #6b7c4e;
+      box-shadow: 0 0 0 2px rgba(107, 124, 78, 0.35);
+    }
+    
+    .btn-army {
+      background: linear-gradient(180deg, #4a5e3a 0%, #3a4a2e 100%);
+      border: 1px solid #5a7048;
+      color: #e0ecd4;
+      transition: all 0.15s;
+    }
+    .btn-army:hover {
+      background: linear-gradient(180deg, #5a7048 0%, #4a5e3a 100%);
+      transform: translateY(-1px);
+    }
+    
+    .elephant {
+      font-size: 2.5rem;
+      filter: grayscale(0.3) sepia(0.4) hue-rotate(60deg);
+      animation: sway 4s ease-in-out infinite;
+    }
+    @keyframes sway {
+      0%, 100% { transform: rotate(-3deg); }
+      50% { transform: rotate(3deg); }
+    }
+    
+    .quote {
+      font-style: italic;
+      opacity: 0.7;
+      border-left: 3px solid #6b7c4e;
+    }
+    
+    table th {
+      color: #8fbc8f;
+    }
+    
+    .raw-col {
+      color: #6b7c4e;
+    }
+    
+    pre {
+      background: #080c08;
+      border: 1px solid #1f2a1c;
+      color: #8fbc8f;
+    }
+    
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    
+    <!-- Header -->
+    <div class="mb-8 text-center">
+      <div class="elephant mb-3">🐘</div>
+      <h1 class="title-font text-lg sm:text-xl text-[#a8c890] tracking-wider leading-relaxed">
+        ЗЕЛЁНЫЙ СЛОНИК
+      </h1>
+      <p class="text-[#6b7c4e] text-sm mt-2 tracking-widest uppercase">Delivery Calc · v1.0</p>
+      <p class="quote text-xs mt-4 px-4 py-2 max-w-md mx-auto text-left">
+        «Братва... а давайте корзину посчитаем. А то слоник зелёный совсем...»
+      </p>
+    </div>
+
+    <!-- Formula (read-only, don't touch) -->
+    <div class="panel rounded-lg p-5 mb-5">
+      <div class="text-[10px] font-semibold uppercase tracking-widest text-[#6b7c4e] mb-3">
+        ⚙ Формула (не трогать)
+      </div>
+      <div class="font-mono text-xs sm:text-sm leading-relaxed text-[#b8c8a8] bg-[#0a0f0a] rounded p-4 border border-[#1f2a1c] overflow-x-auto">
+        <div>D<sub>n</sub> = D<sub>0</sub> × k<sub>n</sub></div>
+        <div class="mt-1">C<sub>n</sub> = C<sub>cp</sub> + [ (k<sub>g</sub> + k<sub>r</sub>) × C<sub>cp</sub> + (D<sub>0</sub> − D<sub>n</sub>) ] / m</div>
+        <div class="mt-1 text-[#6b7c4e]">min_cart = ⌈ C<sub>n</sub> / 100 ⌉ × 100 &nbsp;(для k<sub>n</sub> &lt; 1, иначе 0)</div>
+        <div class="mt-1 text-[#6b7c4e]">delivery_price = ⌈ D<sub>n</sub> / 10 ⌉ × 10</div>
+      </div>
+      <p class="text-[11px] text-[#5a6a52] mt-3">
+        m = 0.17 &nbsp;·&nbsp; k<sub>n</sub> = 1.0 → 0.8 → 0.55 → 0.35 &nbsp;·&nbsp; bar = 20 / 20 / 25 / 35
+      </p>
+    </div>
+
+    <!-- Inputs -->
+    <div class="panel rounded-lg p-5 mb-5">
+      <div class="text-[10px] font-semibold uppercase tracking-widest text-[#6b7c4e] mb-4">
+        🎛 Параметры (полковник разрешил)
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-[#8fbc8f] mb-1.5">
+            k<sub>g</sub> <span class="text-[#5a6a52]">(гость)</span>
+          </label>
+          <input type="number" id="kg" value="0" step="0.001" min="0"
+                 class="input-field w-full px-3 py-2.5 rounded text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[#8fbc8f] mb-1.5">
+            k<sub>r</sub> <span class="text-[#5a6a52]">(ресторан)</span>
+          </label>
+          <input type="number" id="kr" value="0" step="0.001" min="0"
+                 class="input-field w-full px-3 py-2.5 rounded text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[#8fbc8f] mb-1.5">
+            C<sub>cp</sub> <span class="text-[#5a6a52]">(средний чек)</span>
+          </label>
+          <input type="number" id="ccp" value="3277.50" step="0.01" min="0"
+                 class="input-field w-full px-3 py-2.5 rounded text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[#8fbc8f] mb-1.5">
+            D<sub>0</sub> <span class="text-[#5a6a52]">(база доставки)</span>
+          </label>
+          <input type="number" id="d0" value="540" step="1" min="0"
+                 class="input-field w-full px-3 py-2.5 rounded text-sm">
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="panel rounded-lg p-5 mb-5">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-[10px] font-semibold uppercase tracking-widest text-[#6b7c4e]">
+          📋 Результат расчёта
+        </div>
+        <button id="copyBtn" class="btn-army text-xs px-3 py-1.5 rounded font-medium">
+          Скопировать JSON
+        </button>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left border-b border-[#2f3d2c]">
+              <th class="pb-2 font-medium text-xs">#</th>
+              <th class="pb-2 font-medium text-xs">k<sub>n</sub></th>
+              <th class="pb-2 font-medium text-xs">bar%</th>
+              <th class="pb-2 font-medium text-xs">delivery</th>
+              <th class="pb-2 font-medium text-xs">min_cart</th>
+              <th class="pb-2 font-medium text-xs raw-col">raw C<sub>n</sub></th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody" class="font-mono text-[13px]">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- JSON -->
+    <div class="panel rounded-lg p-5 mb-6">
+      <div class="text-[10px] font-semibold uppercase tracking-widest text-[#6b7c4e] mb-3">
+        💾 JSON (для бэкенда)
+      </div>
+      <pre id="jsonOut" class="text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap p-4 rounded"></pre>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-[11px] text-[#4a5a42] space-y-1">
+      <p>«Я тебя сейчас на кусочки порву, а потом обратно соберу...»</p>
+      <p class="opacity-60">— но сначала посчитаем доставку</p>
+      <p class="mt-3 text-[#3a4a32]">Greensych · greenDeliveryCalc</p>
+    </div>
+  </div>
+
+  <script>
+    // === ФОРМУЛЫ НЕ ТРОГАТЬ ===
+    const m = 0.17;
+    const steps = [
+      { kn: 1.0,  bar: 20 },
+      { kn: 0.8,  bar: 20 },
+      { kn: 0.55, bar: 25 },
+      { kn: 0.35, bar: 35 }
+    ];
+
+    const kgInput = document.getElementById('kg');
+    const krInput = document.getElementById('kr');
+    const ccpInput = document.getElementById('ccp');
+    const d0Input = document.getElementById('d0');
+    const resultsBody = document.getElementById('resultsBody');
+    const jsonOut = document.getElementById('jsonOut');
+    const copyBtn = document.getElementById('copyBtn');
+
+    function roundUpTo100(x) {
+      return Math.ceil(x / 100) * 100;
+    }
+
+    function roundDelivery(x) {
+      return Math.ceil(x / 10) * 10;
+    }
+
+    function format(n, digits = 0) {
+      return n.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+
+    function calculate() {
+      const kg = parseFloat(kgInput.value) || 0;
+      const kr = parseFloat(krInput.value) || 0;
+      const Ccp = parseFloat(ccpInput.value) || 0;
+      const D0 = parseFloat(d0Input.value) || 0;
+
+      const rows = [];
+      let html = '';
+
+      steps.forEach((s, i) => {
+        const Dn_raw = D0 * s.kn;
+        const delivery = roundDelivery(Dn_raw);
+
+        let rawC, minCart;
+        if (s.kn >= 1) {
+          rawC = 0;
+          minCart = 0;
+        } else {
+          const delta = D0 - Dn_raw;
+          const extra = ((kg + kr) * Ccp + delta) / m;
+          rawC = Ccp + extra;
+          minCart = roundUpTo100(rawC);
+        }
+
+        rows.push({
+          bar_percent: s.bar,
+          delivery_price: Math.round(delivery * 100),
+          min_cart_amount: Math.round(minCart * 100)
+        });
+
+        html += `
+          <tr class="border-b border-[#1f2a1c] hover:bg-[#141a14]">
+            <td class="py-2.5 text-[#5a6a52]">${i + 1}</td>
+            <td class="py-2.5">${s.kn}</td>
+            <td class="py-2.5">${s.bar}</td>
+            <td class="py-2.5 text-[#a8c890]">${format(delivery)} ₽</td>
+            <td class="py-2.5 font-semibold text-[#c8e0b0]">${format(minCart)} ₽</td>
+            <td class="py-2.5 text-[#5a6a52] text-xs">${s.kn >= 1 ? '—' : format(rawC, 2)}</td>
+          </tr>
+        `;
+      });
+
+      resultsBody.innerHTML = html;
+      jsonOut.textContent = JSON.stringify(rows, null, 2);
+    }
+
+    [kgInput, krInput, ccpInput, d0Input].forEach(el => {
+      el.addEventListener('input', calculate);
+    });
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(jsonOut.textContent).then(() => {
+        copyBtn.textContent = 'Скопировано, братва';
+        setTimeout(() => copyBtn.textContent = 'Скопировать JSON', 1600);
+      });
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
